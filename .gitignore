@@ -17,6 +17,7 @@ venv/
 # Editor directories and files
 .vscode/
 .idea/
+.venv/
 
 # macOS
 .DS_Store
