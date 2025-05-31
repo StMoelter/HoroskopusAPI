@@ -5,7 +5,7 @@ This is a minimal Python API-only application built with Flask and Swagger (via 
 ## Features
 
 - Flask application factory
-- Swagger UI documentation at `/apidocs`
+- Swagger UI documentation at `/docs`
 - Pytest for testing
 - GitHub Actions for CI
 
@@ -22,12 +22,12 @@ pip install -r requirements.txt
 ### Running the app
 
 ```bash
-export FLASK_APP=app
-export FLASK_ENV=development
-flask run
+export APP_ENV=development
+export PORT=5000
+python main.py
 ```
 
-The API documentation is available at http://localhost:5000/apidocs
+The API documentation is available at http://localhost:5000/docs
 
 ### Running tests
 
@@ -51,11 +51,21 @@ black .
 
 ## Docker
 
-Build and run the Docker container:
+Build and run the Docker container for production:
 
 ```bash
 docker build -t <your-dockerhub-username>/horoskopusapi:latest .
-docker run -p 5000:5000 <your-dockerhub-username>/horoskopusapi:latest
+docker run -e APP_ENV=production -p 5000:5000 <your-dockerhub-username>/horoskopusapi:latest
 ```
 
 The API will be available at http://localhost:5000.
+
+### Development with Docker Compose
+
+Use Docker Compose to start the application in development mode with the host project directory mounted:
+
+```bash
+docker-compose up --build
+```
+
+The API will be available at http://localhost:5000, and documentation at http://localhost:5000/docs.

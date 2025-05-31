@@ -24,3 +24,6 @@ venv/
 
 # Logs
 *.log
+
+# Skyfield ephemeris files
+*.bsp
