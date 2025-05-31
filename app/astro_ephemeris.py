@@ -4,18 +4,19 @@ Ephemeris calculations for horoscope API using Skyfield JPL ephemerides.
 
 from skyfield.api import load, Topos
 
-_VALID_PLANETS = [
-    "sun",
-    "moon",
-    "mercury",
-    "venus",
-    "mars",
-    "jupiter",
-    "saturn",
-    "uranus",
-    "neptune",
-    "pluto",
-]
+valid = {
+    'sun': 'SUN',
+    'moon': 'MOON',
+    'mercury': 'MERCURY BARYCENTER',
+    'venus': 'VENUS BARYCENTER',
+    'earth': 'EARTH BARYCENTER',
+    'mars': 'MARS BARYCENTER',
+    'jupiter': 'JUPITER BARYCENTER',
+    'saturn': 'SATURN BARYCENTER',
+    'uranus': 'URANUS BARYCENTER',
+    'neptune': 'NEPTUNE BARYCENTER',
+    'pluto': 'PLUTO BARYCENTER'
+}
 
 _TS = load.timescale()
 _EPH = load("de421.bsp")
@@ -56,12 +57,14 @@ def get_ecliptic_longitude(
         ValueError: If planet_name is not a supported classical body.
     """
     name = planet_name.lower()
-    if name not in _VALID_PLANETS:
+    try:
+        planet_key = valid[name]
+    except KeyError:
         raise ValueError(f"Ungültiger Planetname: {planet_name}")
 
     observer = _EARTH + Topos(latitude_degrees=latitude, longitude_degrees=longitude)
     t = _TS.utc(year, month, day, hour, minute, second)
-    planet = _EPH[name]
+    planet = _EPH[planet_key]
     astrometric = observer.at(t).observe(planet)
     ecliptic_latlon = astrometric.ecliptic_latlon()
     return ecliptic_latlon[1].degrees % 360

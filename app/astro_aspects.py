@@ -1,12 +1,13 @@
 from typing import Dict, List
 
 ASPECTS = {
-    'Konjunktion': (0.0, 8.0),
-    'Sextil': (60.0, 6.0),
-    'Quadrat': (90.0, 6.0),
-    'Trigon': (120.0, 6.0),
-    'Opposition': (180.0, 8.0),
+    "Konjunktion": (0.0, 8.0),
+    "Sextil": (60.0, 6.0),
+    "Quadrat": (90.0, 6.0),
+    "Trigon": (120.0, 6.0),
+    "Opposition": (180.0, 8.0),
 }
+
 
 def find_aspects(planet_positions: Dict[str, float]) -> List[Dict]:
     """
@@ -34,11 +35,13 @@ def find_aspects(planet_positions: Dict[str, float]) -> List[Dict]:
             for aspect_name, (exact_angle, orb) in ASPECTS.items():
                 delta = abs(diff - exact_angle)
                 if delta <= orb:
-                    results.append({
-                        'p1': p1,
-                        'p2': p2,
-                        'aspect': aspect_name,
-                        'orb': round(delta, 2),
-                    })
+                    results.append(
+                        {
+                            "p1": p1,
+                            "p2": p2,
+                            "aspect": aspect_name,
+                            "orb": round(delta, 2),
+                        }
+                    )
                     break
     return results

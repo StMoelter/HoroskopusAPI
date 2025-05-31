@@ -5,6 +5,8 @@ House calculation utilities for horoscope API using Jean Meeus algorithms.
 import math
 from typing import Dict
 from math import radians, cos, tan, sin, atan2, degrees, asin
+from app.astro_zodiac import zodiac_sign
+
 
 def julian_day(
     year: int,
@@ -34,6 +36,7 @@ def julian_day(
     frac = (hour + minute / 60 + second / 3600) / 24
     return jd_day + frac
 
+
 def greenwich_sidereal_time(jd: float) -> float:
     """
     Calculate Greenwich Mean Sidereal Time in hours [0..24) (Meeus, Chap. 12.4).
@@ -42,11 +45,12 @@ def greenwich_sidereal_time(jd: float) -> float:
     gmst_sec = (
         67310.54841
         + (8766003600 + 8640184.812866) * T
-        + 0.093104 * T ** 2
-        - 6.2e-6 * T ** 3
+        + 0.093104 * T**2
+        - 6.2e-6 * T**3
     )
     gmst_hours = (gmst_sec / 3600) % 24
     return gmst_hours
+
 
 def local_sidereal_time(jd: float, longitude_deg: float) -> float:
     """
@@ -55,6 +59,7 @@ def local_sidereal_time(jd: float, longitude_deg: float) -> float:
     gmst_hours = greenwich_sidereal_time(jd)
     lst_hours = (gmst_hours + longitude_deg / 15) % 24
     return lst_hours * 15
+
 
 def calculate_ascendant(
     lst_deg: float,
@@ -71,6 +76,7 @@ def calculate_ascendant(
     ha_asc_rad = atan2(numerator, denominator)
     ha_asc_deg = degrees(ha_asc_rad)
     return (ha_asc_deg + lst_deg) % 360
+
 
 def calculate_midheaven(
     lst_deg: float,
@@ -92,11 +98,13 @@ def calculate_midheaven(
     lambda_mc_rad = atan2(tan(alpha_mc_rad), cos(eps_rad))
     return (degrees(lambda_mc_rad) + 360) % 360
 
+
 def equal_house_cusps(asc_deg: float) -> Dict[str, float]:
     """
     Return equal house cusps H1 through H12 starting from the Ascendant.
     """
-    return {f'H{i}': (asc_deg + (i - 1) * 30) % 360 for i in range(1, 13)}
+    return {f"H{i}": (asc_deg + (i - 1) * 30) % 360 for i in range(1, 13)}
+
 
 def calculate_placidus_houses(
     year: int,
@@ -124,5 +132,43 @@ def calculate_placidus_houses(
     if use_equal:
         return houses
 
-    houses['H10'] = mc_deg
+    houses["H10"] = mc_deg
     return houses
+
+def assign_planets_to_houses(planet_positions: Dict[str, float], house_cusps: Dict[str, float]) -> Dict[str, str]:
+    """
+    Assign each planet to a house based on their ecliptic longitudes.
+    For each planet angle, find the house cusp interval [start, next_start), wrapping at 360°.
+    """
+    sorted_cusps = sorted(house_cusps.items(), key=lambda item: item[1])
+    house_names = [name for name, _ in sorted_cusps]
+    angles = [angle for _, angle in sorted_cusps]
+    n = len(sorted_cusps)
+    result: Dict[str, str] = {}
+    for planet, pos in planet_positions.items():
+        angle = pos % 360
+        assigned = None
+        for i in range(n):
+            start = angles[i]
+            end = angles[(i + 1) % n]
+            if i < n - 1:
+                if start <= angle < end:
+                    assigned = house_names[i]
+                    break
+            else:
+                if angle >= start or angle < angles[0]:
+                    assigned = house_names[i]
+                    break
+        if assigned is None:
+            raise ValueError(f"Could not assign planet {planet} with angle {pos}")
+        result[planet] = assigned
+    return result
+
+def assign_houses_to_signs(house_cusps: Dict[str, float]) -> Dict[str, str]:
+    """
+    Assign each house to a zodiac sign based on its cusp ecliptic longitude.
+    """
+    result: Dict[str, str] = {}
+    for house, cusp in house_cusps.items():
+        result[house] = zodiac_sign(cusp)
+    return result

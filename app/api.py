@@ -33,15 +33,27 @@ def create_app() -> Flask:
     request_model = api.model(
         "HoroscopeRequest",
         {
-            "year": fields.Integer(required=True, description="Geburtsjahr (z.B. 2025)"),
+            "year": fields.Integer(
+                required=True, description="Geburtsjahr (z.B. 2025)"
+            ),
             "month": fields.Integer(required=True, description="Geburtsmonat (1–12)"),
             "day": fields.Integer(required=True, description="Geburtstag (1–31)"),
-            "hour": fields.Integer(required=True, description="Geburtsstunde UTC (0–23)"),
-            "minute": fields.Integer(required=True, description="Geburtsminute UTC (0–59)"),
-            "second": fields.Integer(required=False, default=0, description="Geburtssekunde UTC (0–59)"),
-            "coordinates": fields.Nested(coords_model, description="Geburtsort-Koordinaten"),
+            "hour": fields.Integer(
+                required=True, description="Geburtsstunde UTC (0–23)"
+            ),
+            "minute": fields.Integer(
+                required=True, description="Geburtsminute UTC (0–59)"
+            ),
+            "second": fields.Integer(
+                required=False, default=0, description="Geburtssekunde UTC (0–59)"
+            ),
+            "coordinates": fields.Nested(
+                coords_model, description="Geburtsort-Koordinaten"
+            ),
             "house_system": fields.String(
-                required=False, default="placidus", description="'placidus' oder 'equal'"
+                required=False,
+                default="placidus",
+                description="'placidus' oder 'equal'",
             ),
         },
     )
@@ -149,8 +161,41 @@ def create_app() -> Flask:
             raw_houses = astro_houses.calculate_placidus_houses(
                 year, month, day, hour, minute, second, lat, lon, use_equal=use_equal
             )
-            houses_out = [{"house": h, "cusp": round(cusp, 6)} for h, cusp in raw_houses.items()]
+            houses_out = [
+                {"house": h, "cusp": round(cusp, 6)} for h, cusp in raw_houses.items()
+            ]
 
-            return {"planets": planets_out, "aspects": aspects_out, "houses": houses_out}
+            planets_in_houses_raw = astro_houses.assign_planets_to_houses(
+                planet_positions, raw_houses
+            )
+            planets_in_houses = [
+                {"planet": p, "house": h} for p, h in planets_in_houses_raw.items()
+            ]
+
+            signs_in_houses_raw = astro_houses.assign_houses_to_signs(raw_houses)
+            signs_in_houses = [
+                {"house": h, "sign": s} for h, s in signs_in_houses_raw.items()
+            ]
+
+            asc_cusp = raw_houses.get("H1")
+            desc_cusp = raw_houses.get("H7")
+            ascendant = {
+                "cusp": round(asc_cusp, 6),
+                "sign": astro_zodiac.zodiac_sign(asc_cusp),
+            }
+            descendant = {
+                "cusp": round(desc_cusp, 6),
+                "sign": astro_zodiac.zodiac_sign(desc_cusp),
+            }
+
+            return {
+                "planets": planets_out,
+                "aspects": aspects_out,
+                "houses": houses_out,
+                "planets_in_houses": planets_in_houses,
+                "signs_in_houses": signs_in_houses,
+                "ascendant": ascendant,
+                "descendant": descendant,
+            }
 
     return app

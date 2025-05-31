@@ -2,6 +2,7 @@
 Zodiac sign determination based on ecliptic longitude.
 """
 
+
 def zodiac_sign(ecl_lon_deg: float) -> str:
     """
     Return the German zodiac sign name for a given ecliptic longitude in degrees.
